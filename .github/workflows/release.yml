@@ -1,0 +1,41 @@
+name: Compile CDDNS for release
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ubuntu-slim
+    env:
+      GOOS: linux
+      GOARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.3"
+      - working-directory: client
+        run: go build -ldflags "-s -w" -o ../dist/cddns-client-${{ matrix.arch }} .
+      - working-directory: server
+        run: go build -ldflags "-s -w" -o ../dist/cddns-server-${{ matrix.arch }} .
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cddns-${{ matrix.arch }}
+          path: dist/*
+  release:
+    needs: [build]
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          pattern: cddns-*
+          merge-multiple: true
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: dist/*

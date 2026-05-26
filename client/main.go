@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +18,7 @@ func main() {
 	log.Default().SetFlags(0)
 
 	setup := flag.Bool("setup", false, "run setup")
+	ipOverride := flag.String("i", "", "override ip address to update with")
 
 	flag.Parse()
 
@@ -44,9 +46,17 @@ func main() {
 	// TODO: configurable ip providers
 	var ipProvider IpProvider = IpifyIpProvider{}
 
-	ip, err := ipProvider.GetIp(http.DefaultClient)
-	if err != nil {
-		log.Fatal("failed to get IP address: ", err)
+	var ip net.IP
+	if *ipOverride != "" {
+		ip = net.ParseIP(*ipOverride)
+		if ip == nil {
+			log.Fatal("invalid ip address: ", *ipOverride)
+		}
+	} else {
+		ip, err = ipProvider.GetIp(http.DefaultClient)
+		if err != nil {
+			log.Fatal("failed to get IP address: ", err)
+		}
 	}
 
 	req, err := http.NewRequest("POST", serverLoc+"v1/update", strings.NewReader(ip.String()))
