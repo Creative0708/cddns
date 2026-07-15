@@ -23,7 +23,7 @@ func validateApiKey(key string) error {
 		return ApiKeyError(fmt.Sprintf("invalid api key length %d", len(trimmed)))
 	}
 	for _, ch := range trimmed {
-		if !(ch >= 'A' && ch <= 'Z' || ch >= '2' && ch < '7') {
+		if !(ch >= 'A' && ch <= 'Z' || ch >= '2' && ch <= '7') {
 			return ApiKeyError(fmt.Sprintf("invalid char '%c' in api key", ch))
 		}
 	}
